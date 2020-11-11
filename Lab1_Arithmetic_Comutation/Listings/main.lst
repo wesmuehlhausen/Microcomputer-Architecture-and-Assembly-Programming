@@ -1,0 +1,114 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;*******************************************************
+                       ***************************************
+    2 00000000         ; Author: Wesley Muehlhausen
+    3 00000000         ; Lab 1: Arithmetic Computation
+    4 00000000         ; Date Created: September 21 2020
+    5 00000000         ; Last Modified: September 21 2020
+    6 00000000         ; Description: Simple arithemitc operations, using x, y,
+                        and z variables, equations shown above code...
+    7 00000000         ; Inputs: Vx
+    8 00000000         ; Outputs: Vy, Vz
+    9 00000000         ;*******************************************************
+                       ***************************************
+   10 00000000                 AREA             MyData, DATA, READWRITE, ALIGN=
+2
+   11 00000000        7 
+                       Vx      RN               R7
+   12 00000000 00      Vy      DCB              0           ;
+   13 00000001 00      Vz      DCB              0           ;
+   14 00000002         
+   15 00000002                 AREA             MyCode, CODE, READONLY, ALIGN=2
+   16 00000000                 EXPORT           __main
+   17 00000000         __main
+   18 00000000         
+   19 00000000         ;Vy = 7*Vx + 120
+   20 00000000 F04F 0708       MOV              Vx, #8      ;init Vx
+   21 00000004 4639            MOV              R1, Vx      ;Make copy of Vx in
+                                                             R1
+   22 00000006 EA4F 01C1       LSL              R1, R1, #3  ;Multiply by 8
+   23 0000000A EBA1 0107       SUB              R1, R1, Vx  ;; Changes from 8x 
+                                                            to 7x
+   24 0000000E F101 0178       ADD              R1, R1, #120 ; add 120 to 
+   25 00000012 4B04            LDR              R3, =Vy     ;R0 is address of V
+                                                            y
+   26 00000014 6019            STR              R1, [R3]    ; Vy = R2
+   27 00000016         
+   28 00000016         ;Vz = Vy/8 + 25
+   29 00000016 460C            MOV              R4, R1      ;; put Vy in R4
+   30 00000018 EA4F 04D4       LSR              R4, R4, #3  ;divide by 8
+   31 0000001C F104 0419       ADD              R4, R4, #25 ;add 25
+   32 00000020 4D01            LDR              R5, =Vz     ;R5 is address of V
+                                                            y
+   33 00000022 602C            STR              R4, [R5]    ;Vy = R4
+   34 00000024         
+   35 00000024         
+   36 00000024                 END
+              00000000 
+              00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\main.d -o.\objects\main.o -I.\RTE\_Target_1 -IC:\Keil
+_v5\ARM\PACK\ARM\CMSIS\5.3.0\CMSIS\Include -IC:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\
+1.1.0\Device\Include\TM4C123 --predefine="__EVAL SETA 1" --predefine="__UVISION
+_VERSION SETA 523" --predefine="_RTE_ SETA 1" --predefine="TM4C123GH6PM SETA 1"
+ --list=.\listings\main.lst main.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+MyData 00000000
+
+Symbol: MyData
+   Definitions
+      At line 10 in file main.s
+   Uses
+      None
+Comment: MyData unused
+Vy 00000000
+
+Symbol: Vy
+   Definitions
+      At line 12 in file main.s
+   Uses
+      At line 25 in file main.s
+Comment: Vy used once
+Vz 00000001
+
+Symbol: Vz
+   Definitions
+      At line 13 in file main.s
+   Uses
+      At line 32 in file main.s
+Comment: Vz used once
+3 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+MyCode 00000000
+
+Symbol: MyCode
+   Definitions
+      At line 15 in file main.s
+   Uses
+      None
+Comment: MyCode unused
+__main 00000000
+
+Symbol: __main
+   Definitions
+      At line 17 in file main.s
+   Uses
+      At line 16 in file main.s
+Comment: __main used once
+2 symbols
+343 symbols in table

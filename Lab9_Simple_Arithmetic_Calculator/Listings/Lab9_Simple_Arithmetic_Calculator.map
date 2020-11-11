@@ -1,0 +1,34 @@
+Component: ARM Compiler 6.14 Tool: armlink [5db06800]
+
+==============================================================================
+
+Section Cross References
+
+    main.o(Strings) refers (Special) to lcd.o(LCD_Code) for Display_Char
+    main.o(MyData) refers (Special) to lcd.o(LCD_Code) for Display_Char
+    main.o(MyCode) refers (Special) to lcd.o(LCD_Code) for Display_Char
+    main.o(MyCode) refers to keypad.o(Keypad_Code) for Init_Keypad
+    main.o(MyCode) refers to main.o(Strings) for Ready_Cal
+    main.o(MyCode) refers to main.o(MyData) for ClearFlag_Cal
+    lcd.o(LCD_Code) refers to main.o(MyCode) for Delay1ms
+    keypad.o(Keypad_Code) refers to lcd.o(LCD_Code) for Set_Position
+    keypad.o(Keypad_Code) refers to main.o(MyCode) for Delay1ms
+    keypad.o(Keypad_Code) refers to main.o(MyData) for Key_ASCII
+    keypad.o(Keypad_Code) refers to keypad.o(RAMData) for Xten
+    startup_tm4c123.o(STACK) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_tm4c123.o(HEAP) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_tm4c123.o(RESET) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_tm4c123.o(RESET) refers to startup_tm4c123.o(STACK) for __initial_sp
+    startup_tm4c123.o(RESET) refers to startup_tm4c123.o(.text) for Reset_Handler
+    startup_tm4c123.o(.text) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_tm4c123.o(.text) refers to system_tm4c123.o(.text.SystemInit) for SystemInit
+    startup_tm4c123.o(.text) refers to main.o(MyCode) for __main
+    startup_tm4c123.o(.text) refers to startup_tm4c123.o(HEAP) for Heap_Mem
+    startup_tm4c123.o(.text) refers to startup_tm4c123.o(STACK) for Stack_Mem
+    system_tm4c123.o(.text.SystemCoreClockUpdate) refers to system_tm4c123.o(.text.getOscClk) for getOscClk
+    system_tm4c123.o(.text.SystemCoreClockUpdate) refers to system_tm4c123.o(.data.SystemCoreClock) for SystemCoreClock
+    system_tm4c123.o(.ARM.exidx.text.SystemCoreClockUpdate) refers to system_tm4c123.o(.text.SystemCoreClockUpdate) for [Anonymous Symbol]
+    system_tm4c123.o(.text.getOscClk) refers to system_tm4c123.o(.rodata..Lswitch.table.getOscClk) for .Lswitch.table.getOscClk
+    system_tm4c123.o(.ARM.exidx.text.getOscClk) refers to system_tm4c123.o(.text.getOscClk) for [Anonymous Symbol]
+    system_tm4c123.o(.ARM.exidx.text.SystemInit) refers to system_tm4c123.o(.text.SystemInit) for [Anonymous Symbol]
+
