@@ -1,18 +1,13 @@
 ;*************************************************************************************************
-; Author: Wesley Muehlhausen
+; Author: Kevin Wolff, Wesley Muehlhausen, Johnathan Arnott
 ; Project: Lab9
 ; Program: 16-bit Caculator
 ; Date Created: November 8, 2020
-;
 ; Description: this program will implement a calculator. 
 ; Inputs: the keypad
 ; Outputs: LCD
 ;*************************************************************************************************
 
-
-
-; TO DO: Read carefully all the definitions below and make sure you understand them
-; you will need these definitions throughout the project
 
 ; Special characters and their positions on LCD for calculator
 ;*************************************************************************************************
@@ -70,8 +65,8 @@ ClearFlag_Cal		DCD		0
 	AREA	MyCode, CODE, READONLY, ALIGN=2
 	EXPORT	__main
 	EXPORT	Key_ASCII
-	EXPORT  Delay1ms		
-
+	
+	IMPORT  Delay1ms		
 	IMPORT	Init_LCD_Ports
 	IMPORT	Init_LCD
 	IMPORT	Init_Keypad
@@ -80,7 +75,7 @@ ClearFlag_Cal		DCD		0
 	IMPORT	Display_Char 
 	IMPORT 	SYSCTL_RCC_R
 	IMPORT	Scan_Keypad
-	;IMPORT  Key
+
 
 __main
 	BL		Init_Clock
@@ -135,67 +130,101 @@ Waiting_For_C
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; **********Subroutine Get_Operand1_Cal- gets the first BCD number as operand and stores its hex equivalent in Operand1_Cal
 Get_Operand1_Cal
-	PUSH	{R0, R1, R2, R5}
-	;1	PROMPT FOR OPERAND ENTRY
-	LDR		R1, =POS_Operand_msg_Cal	
-	BL		Set_Position	; 
-	LDR		R0,	=Operand1_msg_Cal	
-	BL		Display_Msg	;
-	;2  SET POSITION TO DISPLAY INPUT OPERAND
-	LDR		R1, =POS_Operand1_Cal
-	BL		Set_Position	
-	;3  INITIALIZE A COUNTER FOR THE SIZE OF TJE OPERAND, I = 0;
-back1	
-	MOV		R5, #0
-	;4	READ KEY FROM KEYPAD
-	LDR		R0, =Key_ASCII
-	LDR		R1, [R0]
-	CMP		R1, POUND_SIGN
-	;KEY = #?
-	BNE		next1;if key != '#', then continue, otherwise compare i and 0
-	;;KEY is equal to #
-	CMP		R5, #0
-	BEQ		back1;if i = 0, read key again
-	;ELSE, (i > 0) jump to end condition
-	B		end1
+	PUSH	{LR, R0-R2}
+	LDR		R1, =POS_Operand_msg_Cal		; Prompt for operand1
+	BL		Set_Position
+	LDR		R0, =Operand1_msg_Cal
+	BL		Display_Msg
+	LDR		R1, =POS_Operand1_Cal			; Set position to display input operand
+	BL		Set_Position
+	MOV		R2, #0							; Initialize counter i = 0
+GL1	BL		Scan_Keypad						; Read Key
+	LDR		R1, =Key_ASCII
+	LDR		R1, [R1]
+	CMP		R1, #POUND_SIGN					; #?
+	BNE		GS0
+	CMP		R2, #0
+	BLS		GL1								; if not i>0 go back to read key
+	B		GN1
+GS0	CMP		R1, #LetterC					; C?
+	BNE		GS1
+	LDR		R0, =ClearFlag_Cal				; Clear flag = 1 and end if C
+	MOV		R1, #1
+	STR		R1, [R0]
+	B		GE
+GS1	CMP		R1, #0x30							; if not >= 0 go back to read key
+	BLO		GL1
+	CMP		R1, #0x39							; if not <= 9 go back to read key
+	BHI		GL1
+	LDR		R0, =Buffer_Number				; Store into buffer + i
+	STR		R1, [R0, R2]
+	MOV		R0, R1							; Display key on LCD, do I increment the position?
+	BL		Display_Char
+	ADD		R2, #1							; i = i + 1
+	CMP		R2, #Size_Cal
+	BNE		GL1
+GN1	LDR		R0, =Buffer_Number				; Store NULL in Buffer + i
+	MOV		R1, #0x00
+	STR		R1, [R0, R2]
+	BL		String_ASCII_BCD2Hex_Lib		; Convert number in Buffer to Hex
+	LDR		R0, =Operand1_Cal				; Store hex into operand1
+	STR		R1, [R0]
+	;ADD		R2, #1							; Set position for operation 
+	ADD		R2, #POS_Operand1_Cal
+	LDR		R1, =POS_Operation_Cal
+	STR		R2, [R1]
+	ADD		R2, #1							; Set position for operand2
+	LDR		R1, =POS_Operand2_Cal
+	STR		R2, [R1]
 	
-next1;KEY is NOT equal to #
-	;KEY = C?
-	CMP		R1, LetterC
-	BNE		next2;if key != 'C', then continue, otherwise compare ClearFlag and 1
-	;if KEY is equal to C, set clear flag equal to 1
-	LDR 	R0, =ClearFlag_Cal
-	MOV 	R2, #1
-	STR		R2, [R0]
-	B		skipToEnd
 	
-next2;KEY is NOT equal to C
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-end1
-
-
-
-skipToEnd
-	POP	{R0, R1, R2, R5}
+GE	POP		{LR, R0-R2}
 	BX		LR
-	
-	
 	
 	
 ; Get_Operand2_Cal Subroutine- Similar to Get_Operand1_Cal
 Get_Operand2_Cal
-	; TO DO: Write the subroutine here.
+	PUSH	{LR, R0-R2}
+	LDR		R1, =POS_Operand_msg_Cal		; Prompt for operand1
+	BL		Set_Position
+	LDR		R0, =Operand2_msg_Cal
+	BL		Display_Msg
+	LDR		R1, =POS_Operand2_Cal			; Set position to display input operand
+	LDR		R1, [R1]
+	BL		Set_Position
+	MOV		R2, #0							; Initialize counter i = 0
+GL2	BL		Scan_Keypad						; Read Key
+	LDR		R1, =Key_ASCII
+	LDR		R1, [R1]
+	CMP		R1, #POUND_SIGN					; #?
+	BNE		GG0
+	CMP		R2, #0
+	BLS		GL2								; if not i>0 go back to read key
+	B		GN2
+GG0	CMP		R1, #LetterC					; C?
+	BNE		GG1
+	LDR		R0, =ClearFlag_Cal				; Clear flag = 1 and end if C
+	MOV		R1, #1
+	STR		R1, [R0]
+	B		GE2
+GG1	CMP		R1, #0x30							; if not >= 0 go back to read key
+	BLO		GL2
+	CMP		R1, #0x39							; if not <= 9 go back to read key
+	BHI		GL2
+	LDR		R0, =Buffer_Number				; Store into buffer + i
+	STR		R1, [R0, R2]
+	MOV		R0, R1							; Display key on LCD, do I increment the position?
+	BL		Display_Char
+	ADD		R2, #1							; i = i + 1
+	CMP		R2, #Size_Cal
+	BNE		GL2
+GN2	LDR		R0, =Buffer_Number				; Store NULL in Buffer + i
+	MOV		R1, #0x00
+	STR		R1, [R0, R2]
+	BL		String_ASCII_BCD2Hex_Lib		; Convert number in Buffer to Hex
+	LDR		R0, =Operand2_Cal				; Store hex into operand1
+	STR		R1, [R0]
+GE2	POP 	{LR, R0-R2}
 	BX		LR
 	LTORG
 
@@ -295,7 +324,6 @@ Init_Vars_Cal
 	STR		R1, [R0]			; clear the result
 	LDR		R0, =ErFlag_Cal
 	STR		R1, [R0]			; clear the error flag
-	POP		{LR, R1, R0}
 	LDR		R0, =ClearFlag_Cal		; 
 	STR		R1, [R0]			; clear the clear flag
 	POP		{LR, R1, R0}
@@ -304,17 +332,134 @@ Init_Vars_Cal
 ; Get_Operation_Cal subroutine- Receives and displays the operation
 Get_Operation_Cal
 ; TO DO: Write this subroutine here.
+	PUSH	{LR, R0-R2}
+	LDR		R1, =POS_Operation_msg_Cal		; Prompt for operation
+	BL		Set_Position
+	LDR		R0, =Operation_msg_Cal
+	BL		Display_Msg
+	LDR		R1, =POS_Operation_Cal			; Set position to display input operand
+	LDR		R1, [R1]
+	BL		Set_Position
+	
+GL3	BL		Scan_Keypad						; Read Key
+	LDR		R1, =Key_ASCII
+	LDR		R1, [R1]
+	CMP		R1, #LetterA					;A?
+	BNE		GO1
+	MOV		R2, #0x2B						;Sign = + in ascii
+	B		OM
+GO1	CMP		R1, #LetterB					;B?
+	BNE		GO2
+	MOV		R2, #0x2D						;Sign = - in ascii
+	B		OM
+GO2	CMP		R1, #ASTERISK					;*?
+	BNE		GO3
+	MOV		R2, R1							;Sign = * in ascii
+	B		OM
+GO3	CMP		R1, #LetterD					;D?
+	BNE		GO4
+	MOV		R2, #0x2F						;Sign = / in ascii
+	B		OM
+GO4	CMP		R1, #LetterC					;C?
+	BNE		GL3
+	LDR		R0, =ClearFlag_Cal				;clear flag = 1
+	MOV		R1, #1
+	STR		R1, [R0]
+	B		OE
+OM	LDR		R0, =Mode_Cal					; Mode = Key
+	STR		R1, [R0]
+	MOV		R1, R2							; Display sign
+	BL		Display_Char
+OE	POP		{LR, R0-R2}
 	BX		LR
 
 ; Operation_Cal Subroutine- Carries out the specified operation
 Operation_Cal
 ; TO DO: Write the subroutine here.
+	PUSH	{LR, R0-R2}
+	LDR		R2, =Mode_Cal
+	LDR		R2, [R2]
+	CMP		R2, #LetterA		;Addition?
+	BNE		OC1
+	LDR		R0, =Operand1_Cal	;Compute addition
+	LDR		R1, [R0]
+	LDR		R0, =Operand2_Cal
+	LDR		R0, [R0]
+	ADD		R1, R1, R0
+	LDR		R0, =Result_Cal		;Store result
+	STR		R1, [R0]
+	B		CV					;Go to overflow check
+OC1	CMP		R2, #LetterB		;Subtraction?
+	BNE		OC2
+	LDR		R0, =Operand1_Cal	;Compute subtraction
+	LDR		R1, [R0]
+	LDR		R0, =Operand2_Cal
+	LDR		R0, [R0]
+	CMP		R1, R0				;Operand1 < Operand2?
+	BHS		SG
+	B		SV
+SG	SUB		R1, R1, R0
+	LDR		R0, =Result_Cal		;Store result
+	STR		R1, [R0]
+	B		CV
+OC2	CMP		R2, #LetterD		;Division?
+	BNE		OC3
+	LDR		R0, =Operand1_Cal	;Compute division
+	LDR		R1, [R0]
+	LDR		R0, =Operand2_Cal
+	LDR		R0, [R0]
+	CMP		R0, #0
+	BEQ		SV
+	UDIV	R1, R1, R0
+	LDR		R0, =Result_Cal		;Store result
+	STR		R1, [R0]
+	B		CV
+OC3	LDR		R0, =Operand1_Cal	;Compute multiplication
+	LDR		R1, [R0]
+	LDR		R0, =Operand2_Cal
+	LDR		R0, [R0]
+	MUL		R1, R1, R0
+	LDR		R0, =Result_Cal		;Store result
+	STR		R1, [R0]
+	B		CV
+CV	MOV		R0, #0xFFFF			;Overflow?
+	CMP		R1, R0				
+	BLS		CE
+SV	LDR		R0, =ErFlag_Cal		;Error flag = 1
+	MOV		R1, #1
+	STR		R1, [R0]
+CE	POP		{LR, R0-R2}
 	BX		LR
 	
 	
 ; Display_Result_Cal Subroutine- Display the final outcome
 Display_Result_Cal
 ; TO DO: Write the subroutine here.
+	PUSH	{LR, R0, R1}
+	LDR		R0, =ErFlag_Cal			
+	LDR		R1, [R0]
+	CMP		R1, #1					;Error flag = 1?
+	BEQ		DEM
+	LDR		R1, =Result_Cal			;Convert from Hex (R1) to ASCII string in Buffer (R0)
+	LDR		R1, [R1]
+	BL		Hex2DecChar_Lib
+	LDR		R1, =POS_Result_Cal		;Set position
+	BL		Set_Position
+	BL		Display_Msg				;Display buffer
+	B		DRE
+DEM	MOV		R1, #0					;Error flag = 0
+	LDR		R1, =POS_Error_msg_Cal		;Set position
+	BL		Set_Position
+	LDR		R0, =Error_msg_Cal
+	BL		Display_Msg
+	STR		R1, [R0]
+	MOV		R0, #2000				;Wait 2 seconds
+	BL		Delay1ms
+	BL		Clear					;Clear the display
+	LDR		R0, =ClearFlag_Cal		;Clear flag = 1
+	MOV		R1, #1
+	STR		R1, [R0]
+DRE	POP		{LR, R0, R1}
 	BX		LR
 	
 	
@@ -331,20 +476,5 @@ Init_Clock
 	POP		{LR, R1, R0}
 	BX		LR
 
-;Delay milliseconds
-Delay1ms
-	PUSH	{LR, R0, R3, R4}
-	MOVS	R3, R0
-	BNE		L1; if n=0, return
-	BX		LR; return
-
-L1	LDR		R4, =5334
-			; do inner loop 5336 times (16 MHz CPU clock)
-L2	SUBS	R4, R4,#1
-	BNE		L2
-	SUBS	R3, R3, #1
-	BNE		L1
-	POP		{LR, R0, R3, R4}
-	BX		LR
 
 	END
